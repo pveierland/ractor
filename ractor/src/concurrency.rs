@@ -81,6 +81,11 @@ pub mod async_std_primitives;
 pub use self::async_std_primitives::*;
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+mod send;
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+pub(crate) use send::*;
+
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub mod wasm_browser_primitives;
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub use self::wasm_browser_primitives::*;

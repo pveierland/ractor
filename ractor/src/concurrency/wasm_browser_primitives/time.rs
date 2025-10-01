@@ -8,7 +8,6 @@
 
 /// from tokio_with_wasm-0.8.6\src\glue\common\mod.rs
 mod common {
-    use js_sys::Function;
     use wasm_bindgen::{prelude::*, JsValue};
 
     #[wasm_bindgen]
@@ -17,12 +16,6 @@ mod common {
         pub fn error(s: &str);
         #[wasm_bindgen(js_namespace = Date, js_name = now)]
         pub fn now() -> f64;
-        #[wasm_bindgen(js_namespace = globalThis, js_name = setTimeout)]
-        pub fn set_timeout(callback: &Function, milliseconds: f64);
-        #[wasm_bindgen(js_namespace = globalThis, js_name = setInterval)]
-        pub fn set_interval(callback: &Function, milliseconds: f64) -> i32;
-        #[wasm_bindgen(js_namespace = globalThis, js_name = clearInterval)]
-        pub fn clear_interval(id: i32);
     }
 
     pub(super) trait LogError {
@@ -71,6 +64,8 @@ use util::*;
 
 use common::*;
 
+use crate::concurrency::wasm_browser_primitives::web_global_scope::*;
+
 use js_sys::Promise;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
@@ -83,7 +78,7 @@ use wasm_bindgen::prelude::{Closure, JsCast};
 use wasm_bindgen_futures::JsFuture;
 
 async fn time_future(duration: Duration) {
-    let milliseconds = duration.as_millis() as f64;
+    let milliseconds = duration.as_millis() as i32;
     let promise = Promise::new(&mut |resolve, _reject| {
         set_timeout(&resolve, milliseconds);
     });
@@ -176,7 +171,7 @@ impl From<Elapsed> for io::Error {
 /// Creates a new interval that ticks every `period` duration.
 pub(super) fn interval(period: Duration) -> Interval {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    let period_ms = period.as_millis() as f64;
+    let period_ms = period.as_millis() as i32;
     // Create a closure that sends a tick via the channel.
     let closure = Closure::wrap(Box::new(move || {
         let _ = tx.send(());
@@ -218,7 +213,7 @@ impl Interval {
         // Create a new channel to receive ticks.
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         self.rx = rx;
-        let period_ms = self.period.as_millis() as f64;
+        let period_ms = self.period.as_millis() as i32;
         // Set up a new interval.
         let closure = Closure::wrap(Box::new(move || {
             let _ = tx.send(());

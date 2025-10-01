@@ -8,6 +8,9 @@
 
 mod time;
 
+#[allow(unused)]
+mod web_global_scope;
+
 use std::future::Future;
 
 use tokio_with_wasm::alias as tokio;
