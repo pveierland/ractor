@@ -7,8 +7,6 @@
 //! This implementation only works in a browser environment and is not suitable for server-side wasm use.
 
 mod time;
-
-#[allow(unused)]
 mod web_global_scope;
 
 use std::future::Future;
@@ -69,20 +67,8 @@ where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
 {
-    #[cfg(tokio_unstable)]
-    {
-        let mut builder = tokio::task::Builder::new();
-        if let Some(name) = name {
-            builder = builder.name(name);
-        }
-        builder.spawn(future).expect("Tokio task spawn failed")
-    }
-
-    #[cfg(not(tokio_unstable))]
-    {
-        let _ = name;
-        tokio::task::spawn(future)
-    }
+    let _ = name;
+    tokio::task::spawn(future)
 }
 
 /// Execute the future up to a timeout
