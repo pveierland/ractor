@@ -64,7 +64,7 @@ use util::*;
 
 use common::*;
 
-use crate::concurrency::wasm_browser_primitives::web_global_scope::*;
+use crate::concurrency::wasm_browser_primitives::web_timer_interface::*;
 use crate::concurrency::SendWrapper;
 
 use js_sys::Promise;

@@ -7,7 +7,7 @@
 //! This implementation only works in a browser environment and is not suitable for server-side wasm use.
 
 mod time;
-mod web_global_scope;
+mod web_timer_interface;
 
 use std::future::Future;
 
