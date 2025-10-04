@@ -65,6 +65,7 @@ use util::*;
 use common::*;
 
 use crate::concurrency::wasm_browser_primitives::web_global_scope::*;
+use crate::concurrency::SendWrapper;
 
 use js_sys::Promise;
 use std::error::Error;
@@ -80,7 +81,7 @@ use wasm_bindgen_futures::JsFuture;
 async fn time_future(duration: Duration) {
     let milliseconds = duration.as_millis() as i32;
     let promise = Promise::new(&mut |resolve, _reject| {
-        set_timeout(&resolve, milliseconds);
+        let _ = set_timeout(&resolve, milliseconds);
     });
     JsFuture::from(promise).await.log_error("TIME_FUTURE");
 }
@@ -88,17 +89,15 @@ async fn time_future(duration: Duration) {
 /// Waits until `duration` has elapsed.
 pub(super) fn sleep(duration: Duration) -> Sleep {
     let time_future = time_future(duration);
-    let send_safe_future = wrap_future_as_send(time_future);
+
     Sleep {
-        time_future: Box::pin(async move {
-            let _ = send_safe_future.await;
-        }),
+        time_future: SendWrapper::new(Box::pin(time_future) as Pin<Box<dyn Future<Output = ()>>>),
     }
 }
 
 /// Future returned by `sleep`.
 pub(super) struct Sleep {
-    time_future: Pin<Box<dyn Future<Output = ()> + Send>>,
+    time_future: SendWrapper<Pin<Box<dyn Future<Output = ()>>>>,
 }
 
 impl Future for Sleep {
@@ -116,19 +115,16 @@ where
     F: Future,
 {
     let time_future = time_future(duration);
-    let send_safe_future = wrap_future_as_send(time_future);
     Timeout {
         future: Box::pin(future),
-        time_future: Box::pin(async move {
-            let _ = send_safe_future.await;
-        }),
+        time_future: SendWrapper::new(Box::pin(time_future) as Pin<Box<dyn Future<Output = ()>>>),
     }
 }
 
 /// Future returned by `timeout`.
 pub(super) struct Timeout<F: Future> {
     future: Pin<Box<F>>,
-    time_future: Pin<Box<dyn Future<Output = ()> + Send>>,
+    time_future: SendWrapper<Pin<Box<dyn Future<Output = ()>>>>,
 }
 
 impl<F: Future> Future for Timeout<F> {
