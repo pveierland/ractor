@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 use wasm_bindgen::prelude::{JsCast, JsValue};
 use web_sys::{Window, WorkerGlobalScope};
 
-pub enum WebTimerInterface {
+pub(crate) enum WebTimerInterface {
     NodeJs {
         clear_interval: Function,
         set_interval: Function,
@@ -15,7 +15,7 @@ pub enum WebTimerInterface {
 }
 
 impl WebTimerInterface {
-    pub fn clear_interval(&self, interval_id: i32) {
+    pub(crate) fn clear_interval(&self, interval_id: i32) {
         match &self {
             WebTimerInterface::NodeJs { clear_interval, .. } => {
                 let _ = clear_interval
@@ -29,7 +29,7 @@ impl WebTimerInterface {
         }
     }
 
-    pub fn set_interval(
+    pub(crate) fn set_interval(
         &self,
         callback: &Function,
         delay_milliseconds: i32,
@@ -55,7 +55,7 @@ impl WebTimerInterface {
         }
     }
 
-    pub fn set_timeout(
+    pub(crate) fn set_timeout(
         &self,
         callback: &Function,
         delay_milliseconds: i32,
@@ -118,23 +118,23 @@ fn get_web_timer_interface() -> Result<WebTimerInterface, JsValue> {
     }
 }
 
-pub fn clear_interval(interval_id: i32) {
+pub(crate) fn clear_interval(interval_id: i32) {
     web_timer_interface().clear_interval(interval_id)
 }
 
-pub fn set_interval(callback: &Function, delay_milliseconds: i32) -> i32 {
+pub(crate) fn set_interval(callback: &Function, delay_milliseconds: i32) -> i32 {
     web_timer_interface()
         .set_interval(callback, delay_milliseconds)
         .expect("failed to call setInterval in web environment")
 }
 
-pub fn set_timeout(callback: &Function, delay_milliseconds: i32) -> i32 {
+pub(crate) fn set_timeout(callback: &Function, delay_milliseconds: i32) -> i32 {
     web_timer_interface()
         .set_timeout(callback, delay_milliseconds)
         .expect("failed to call setTimeout in web environment")
 }
 
-pub fn web_timer_interface() -> &'static SendWrapper<WebTimerInterface> {
+pub(crate) fn web_timer_interface() -> &'static SendWrapper<WebTimerInterface> {
     static INSTANCE: OnceLock<SendWrapper<WebTimerInterface>> = OnceLock::new();
     INSTANCE.get_or_init(|| SendWrapper::new(get_web_timer_interface().unwrap()))
 }
