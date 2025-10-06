@@ -158,7 +158,6 @@
     unreachable_pub,
     unused_imports,
     unused_variables,
-    unused_crate_dependencies,
     clippy::mod_module_files,
     unsafe_code
 )]
