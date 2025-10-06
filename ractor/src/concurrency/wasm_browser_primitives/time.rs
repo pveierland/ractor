@@ -39,29 +39,6 @@ mod common {
     }
 }
 
-mod util {
-    use std::future::Future;
-
-    use tokio::sync::oneshot::error::RecvError;
-
-    pub(super) fn wrap_future_as_send<F, T>(
-        f: F,
-    ) -> impl Future<Output = Result<T, RecvError>> + Send
-    where
-        F: Future<Output = T> + 'static,
-        T: Send + 'static,
-    {
-        let (tx, rx) = crate::concurrency::oneshot();
-        tokio_with_wasm::spawn_local(async move {
-            let result = f.await;
-            let _ = tx.send(result); // note: failures here are ignored, the most likely reason would be a dropped receiver
-        });
-        rx
-    }
-}
-
-use util::*;
-
 use common::*;
 
 use crate::concurrency::wasm_browser_primitives::web_timer_interface::*;
